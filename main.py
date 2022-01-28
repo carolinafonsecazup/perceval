@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from perceval.backends.core.dockerhub import DockerHub
 
 load_dotenv()
-"""Configuração de logging"""
+
 logging.basicConfig(level=logging.INFO)
 
 """Configuração de autorização da api no Google Sheets"""
