@@ -1,0 +1,5 @@
+# Function dependencies, for example:
+# package>=version
+pygsheets>=2.0.0
+perceval>=0.12.0
+python-dotenv>=0.19.2

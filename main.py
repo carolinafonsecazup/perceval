@@ -84,11 +84,16 @@ repos = {DockerHub("horuszup", "horusec-cli"),
          DockerHub("ritclizup", "rit_aws_list_bucket")
          }
 
+"""Limpa dados antigos da planilha"""
+
 
 def limpa_dados_antigos():
     logging.info("Limpando dados antigos")
     worksheet.clear(start='A1', end='F100')
     logging.info("Limpeza concluída")
+
+
+"""Criar os cabeçalhos da planilha"""
 
 
 def criar_headers():
@@ -97,7 +102,10 @@ def criar_headers():
     logging.info("Cabeçalhos criados")
 
 
-def extrair_dados():
+"""Faz a guarda dos dados extraídos em uma planilha definida no client_secret.json"""
+
+
+def guardar_dados():
     logging.info("Tratando informacoes")
     name = image['data']['name']
     namespace = image['data']['namespace']
@@ -110,12 +118,20 @@ def extrair_dados():
     logging.info("Inclusão na planilha feita com sucesso")
 
 
-try:
-    limpa_dados_antigos()
-    criar_headers()
-    for repo in repos:
-        for image in repo.fetch():
-            extrair_dados()
-    logging.info("Extracao concluida com sucesso")
-except RuntimeError:
-    raise Exception("Erro ao buscar os dados solicitados")
+"""Ponto de início da rotina"""
+
+
+def start():
+    global image
+    try:
+        limpa_dados_antigos()
+        criar_headers()
+        for repo in repos:
+            for image in repo.fetch():
+                guardar_dados()
+        logging.info("Extracao concluida com sucesso")
+    except RuntimeError:
+        raise Exception("Erro ao buscar os dados solicitados")
+
+
+start()
