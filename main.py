@@ -1,3 +1,5 @@
+import csv
+import datetime
 import logging
 import os
 
@@ -13,10 +15,11 @@ logging.basicConfig(level=logging.INFO)
 google = pygsheets.authorize(service_account_env_var=os.environ.get("GDRIVE_API_CREDENTIALS"))
 
 """Configuração de chamada da planilha específica"""
-sheets = google.open_by_key("1fqJlKSYn1IgGD88LdFabPw3psCc8cS1FfZAKLrmx3lk")
+sheets = google.open_by_key("17ZCBg1wdSuw3a5CU7HnDk4SjhUymF-BDsSAn-_hddCE")
 logging.info("Conexão com o google sheets feita com sucesso")
-"""Configuração da página específica a ser trabalhada"""
-worksheet = sheets.worksheet_by_title("dockerhubpulls")
+"""Configuração da página específica a ser trabalhada cujo nome será o localdate do momento"""
+today = datetime.date.today()
+worksheet = sheets.add_worksheet(str(today))
 
 repos = {DockerHub("horuszup", "horusec-cli"),
          DockerHub("horuszup", "horusec-manager"),
@@ -99,10 +102,14 @@ def limpa_dados_antigos():
 def criar_headers():
     headers = ["name", "namespace", "description", "status", "stars", "pulls"]
     worksheet.append_table(headers, start='A1')
+    global db
+    with open("db.csv", "a") as database:
+        db = csv.writer(database)
+        db.writerow(headers)
     logging.info("Cabeçalhos criados")
 
 
-"""Faz a guarda dos dados extraídos em uma planilha definida no client_secret.json"""
+"""Faz a guarda dos dados extraídos em um csv"""
 
 
 def guardar_dados():
@@ -114,8 +121,19 @@ def guardar_dados():
     stars = image['data']['star_count']
     pulls = image['data']['pull_count']
     new_row = [name, namespace, description, status, stars, pulls]
-    worksheet.append_table(new_row, start='A2')
-    logging.info("Inclusão na planilha feita com sucesso")
+    with open("db.csv", "a") as database:
+        db = csv.writer(database)
+        db.writerow(new_row)
+
+
+"""Faz o upload do csv já preenchido na planilha respectiva"""
+
+
+def upload_csv():
+    with open("db.csv", "r") as db:
+        reader = csv.reader(db)
+        database = list(reader)
+    worksheet.update_values(crange='A1', values=database)
 
 
 """Ponto de início da rotina"""
@@ -130,6 +148,8 @@ def start():
             for image in repo.fetch():
                 guardar_dados()
         logging.info("Extracao concluida com sucesso")
+        upload_csv()
+        logging.info("Inclusão na planilha feita com sucesso")
     except RuntimeError:
         raise Exception("Erro ao buscar os dados solicitados")
 
